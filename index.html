@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ashel's Barcode Gen</title>
-    <!-- JsBarcode library dependency included via secure CDN for rendering standard barcodes -->
+    <!-- Built-in high compatibility script -->
     <script src="https://jsdelivr.net"></script>
     <style>
-        /* Base Reset & Grid Background */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -25,11 +24,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow-y: auto;
-            padding: 40px 20px;
+            padding: 20px;
         }
 
-        /* Central Glow Panel */
         .container {
             background-color: #0b0f0c;
             border: 2px solid #00ff7f;
@@ -38,13 +35,9 @@
             max-width: 520px;
             padding: 35px 30px;
             text-align: center;
-            box-shadow: 
-                0 0 20px rgba(0, 255, 127, 0.2),
-                inset 0 0 15px rgba(0, 255, 127, 0.1);
-            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 127, 0.2);
         }
 
-        /* Neon Header Text */
         h1 {
             color: #00ff7f;
             font-size: 24px;
@@ -55,7 +48,6 @@
             margin-bottom: 4px;
         }
 
-        /* Subtitle / Copyright styling */
         .copyright {
             color: rgba(0, 255, 127, 0.5);
             font-size: 9px;
@@ -64,12 +56,10 @@
             margin-bottom: 25px;
         }
 
-        /* Input Form Grouping */
         .form-group {
             margin-bottom: 16px;
         }
 
-        /* Cyberpunk Input Boxes */
         input[type="text"] {
             width: 100%;
             background-color: #070a08;
@@ -79,7 +69,6 @@
             color: #00ff7f;
             font-size: 13px;
             outline: none;
-            transition: all 0.3s ease;
         }
 
         input[type="text"]:focus {
@@ -87,12 +76,10 @@
             box-shadow: 0 0 8px rgba(0, 255, 127, 0.3);
         }
 
-        /* Input Placeholders matching your image */
         input::placeholder {
             color: rgba(0, 255, 127, 0.35);
         }
 
-        /* High-luminance Solid Button */
         button {
             width: 100%;
             background-color: #1cfc94;
@@ -104,21 +91,14 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 8px;
-            transition: all 0.2s ease;
             box-shadow: 0 0 15px rgba(28, 252, 148, 0.4);
         }
 
         button:hover {
             background-color: #00ff7f;
             box-shadow: 0 0 25px rgba(0, 255, 127, 0.7);
-            transform: translateY(-1px);
         }
 
-        button:active {
-            transform: translateY(1px);
-        }
-
-        /* Dynamic barcode output box space */
         .barcode-output {
             margin-top: 25px;
             display: flex;
@@ -127,33 +107,31 @@
             gap: 15px;
         }
 
-        canvas {
+        svg {
             background: #fff;
             padding: 15px;
             border-radius: 6px;
-            display: none; /* Hidden until barcode successfully generated */
+            display: none;
             max-width: 100%;
+            height: auto;
         }
 
-        /* Dynamic Glow Download Link */
         .download-link {
-            display: none; /* Hidden until content is loaded */
+            display: none;
             color: #00ff7f;
             text-decoration: none;
             font-weight: bold;
             font-size: 14px;
-            letter-spacing: 0.5px;
             border: 1px dashed #00ff7f;
             padding: 10px 20px;
             border-radius: 6px;
-            transition: all 0.3s ease;
             text-shadow: 0 0 5px rgba(0, 255, 127, 0.5);
+            cursor: pointer;
         }
 
         .download-link:hover {
             background-color: rgba(0, 255, 127, 0.1);
             box-shadow: 0 0 15px rgba(0, 255, 127, 0.3);
-            text-shadow: 0 0 8px rgba(0, 255, 127, 0.8);
         }
     </style>
 </head>
@@ -169,7 +147,7 @@
             </div>
             
             <div class="form-group">
-                <input type="text" id="eanCode" placeholder="EAN-13" required>
+                <input type="text" id="barcodeData" placeholder="Barcode Text or Numbers" required>
             </div>
             
             <div class="form-group">
@@ -180,8 +158,9 @@
         </form>
 
         <div class="barcode-output">
-            <canvas id="barcodeCanvas"></canvas>
-            <a id="downloadBtn" class="download-link" href="#" download="barcode.png">Download Barcode Asset</a>
+            <!-- Swapped canvas out for SVG element to allow cross-origin friendly data building -->
+            <svg id="barcodeSvg"></svg>
+            <a id="downloadBtn" class="download-link">Download Barcode Asset</a>
         </div>
     </div>
 
@@ -189,42 +168,46 @@
         function generateBarcode(event) {
             event.preventDefault();
 
-            // Fetch current input values
             const name = document.getElementById('prodName').value.trim();
-            const code = document.getElementById('eanCode').value.trim();
+            const dataInput = document.getElementById('barcodeData').value.trim();
             const priceVal = document.getElementById('price').value.trim();
             
-            const canvas = document.getElementById('barcodeCanvas');
+            const svgElement = document.getElementById('barcodeSvg');
             const downloadBtn = document.getElementById('downloadBtn');
 
             try {
-                // Generate the barcode visual data via JsBarcode framework
-                JsBarcode(canvas, code, {
-                    format: "EAN13",
-                    text: `${name} | $${priceVal}`, // Combined string displayed below lines
+                // Renders clean scale-independent vector math onto the markup tree
+                JsBarcode(svgElement, dataInput, {
+                    format: "CODE128",
+                    text: `${name} | $${priceVal}`, 
                     font: "monospace",
-                    fontSize: 14,
+                    fontSize: 15,
                     textMargin: 8,
                     width: 2,
-                    height: 70,
+                    height: 75,
                     displayValue: true
                 });
 
-                // Display elements upon successful render pass
-                canvas.style.display = "block";
+                svgElement.style.display = "block";
                 
-                // Convert internal canvas rendering to clear, downloadable PNG URL asset
-                const dataUrl = canvas.toDataURL("image/png");
-                downloadBtn.href = dataUrl;
+                // Formats elements into raw text structure strings
+                const svgSerializer = new XMLSerializer();
+                let svgString = svgSerializer.serializeToString(svgElement);
                 
-                // Format file download name layout cleanly
+                // Pack string directly into a local hardware binary object bypass block
+                const svgBlob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+                const blobUrl = URL.createObjectURL(svgBlob);
+                
+                // Assign local address mappings
+                downloadBtn.href = blobUrl;
+                
                 const formattedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                downloadBtn.download = `barcode_${formattedName}.png`;
+                downloadBtn.download = `barcode_${formattedName}.svg`;
                 downloadBtn.style.display = "inline-block";
 
             } catch (error) {
-                alert("Generation error: Please ensure your code is a valid 13-digit sequence for EAN-13 standards.");
-                canvas.style.display = "none";
+                alert("Generation Error: Visual asset construction halted.");
+                svgElement.style.display = "none";
                 downloadBtn.style.display = "none";
             }
         }
