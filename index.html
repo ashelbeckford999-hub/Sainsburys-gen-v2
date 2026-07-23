@@ -382,9 +382,9 @@ function generateBarcode(){
     const paddedPrice = padLeft(price,6);
 
     const base =
-        "91" +
-        barcode +
-        paddedPrice;
+    "90" +
+    barcode +
+    paddedPrice;
 
     const check =
         calculateCheckDigit(base);
